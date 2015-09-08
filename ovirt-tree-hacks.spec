@@ -1,12 +1,14 @@
 Summary:        Hacks required to build a tree
 Name:           ovirt-tree-hacks
 Version:        1.0
-Release:        0.1
+Release:        0.2
 License:        MIT
 Group:	        System Environment/Base
+Requires:       vdsm
 
 %define see_bug echo Applying hack for bug
 
+%define systemdunits /usr/lib/systemd/system/
 %description
 TBD
 
@@ -18,14 +20,52 @@ TBD
 
 
 %install
+%see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1261056
+mkdir -p %{buildroot}/%{systemdunits}/vdsm-network.service.d/
+cat > %{buildroot}/%{systemdunits}/vdsm-network.service.d/get-bonding-defaults.conf <<EOC
+[Service]
+PreExecStart=/bin/curl -o /var/lib/bonding-defaults.json "https://gerrit.ovirt.org/gitweb?p=vdsm.git;a=blob_plain;f=vdsm/bonding-defaults.json;hb=HEAD"
+EOC
+
+%see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1260747
+mkdir -p %{buildroot}/usr/bin
+cat > %{buildroot}/usr/bin/create-rhev-dir <<EOS
+mkdir -vp /var/lib/vdsm/rhev
+chown -v vdsm:kvm /var/lib/vdsm/rhev
+chattr -i /
+ln -s /var/lib/vdsm/rhev /rhev
+chattr +i
+EOS
+chmod a+x %{buildroot}/usr/bin/create-rhev-dir
+
+mkdir -p %{buildroot}/%{systemdunits}/vdsmd.service.d/
+cat > %{buildroot}/%{systemdunits}/vdsmd.service.d/create-rhev-dir.conf <<EOC
+[Service]
+PreExecStart=/usr/bin/create-rhev-dir
+EOC
+
+%see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1261093
+mkdir -p %{buildroot}/usr/bin
+cat > %{buildroot}/usr/bin/sync-sanlock <<EOS
+{ cat /etc/passwd ; egrep "qemu|kvm|vdsm|sanlock" /usr/lib/passwd ; } | sort -u > /etc/passwd_
+mv -v /etc/passwd_ /etc/passwd
+
+{ cat /etc/group ; egrep "qemu|kvm|vdsm|sanlock" /usr/lib/group ; } | sort -u > /etc/group_
+mv -v /etc/group_ /etc/group
+
+sed -i '/^\(qemu\|kvm\):/ s/$/,sanlock/" /etc/group
+EOS
+chmod a+x %{buildroot}/usr/bin/sync-sanlock
+
+mkdir -p %{buildroot}/%{systemdunits}/vdsmd.service.d/
+cat > %{buildroot}/%{systemdunits}/vdsmd.service.d/handle-sanlock-uid.conf <<EOC
+[Service]
+PreExecStart=/usr/bin/sync-sanlock
+EOC
+
 
 
 %post
-%see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1260747
-mkdir -vp %{_sharedstatedir}/rhev
-rmdir -v /rhev
-ln -s /rhev %{_sharedstatedir}/rhev
-
 %see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1171291
 grep rpc /usr/lib/passwd >> /etc/passwd
 grep rpc /usr/lib/group >> /etc/group
@@ -36,7 +76,13 @@ sed -i "/Wants/ s/mom-vdsm\.service//" \
        /usr/lib/systemd/system/vdsmd.service
 
 
+
 %files
+/usr/bin/create-rhev-dir
+/usr/bin/sync-sanlock
+/usr/lib/systemd/system/vdsm-network.service.d/get-bonding-defaults.conf
+/usr/lib/systemd/system/vdsmd.service.d/create-rhev-dir.conf
+/usr/lib/systemd/system/vdsmd.service.d/handle-sanlock-uid.conf
 
 
 %changelog
