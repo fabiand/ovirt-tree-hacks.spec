@@ -47,6 +47,9 @@ EOS
 chmod a+x %{buildroot}/usr/bin/hack-rhev-dir
 
 cat > %{buildroot}/%{systemdunits}/vdsm-network.service.wants/hack-rhev-dir.service <<EOC
+[Unit]
+Before=vdsm-network.service
+
 [Service]
 ExecStart=/usr/bin/hack-rhev-dir
 EOC
@@ -73,6 +76,9 @@ chmod a+x %{buildroot}/usr/bin/hack-uids
 # Run it before rpcbind which is run before vdsm
 mkdir -p %{buildroot}/%{systemdunits}/rpcbind.service.wants/
 cat > %{buildroot}/%{systemdunits}/rpcbind.service.wants/hack-rpc-uid.service <<EOC
+[Unit]
+Before=rpcbind.service
+
 [Service]
 ExecStart=/usr/bin/hack-uids
 EOC
