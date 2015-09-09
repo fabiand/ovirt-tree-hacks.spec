@@ -1,7 +1,7 @@
 Summary:        Hacks required to build a tree
 Name:           ovirt-tree-hacks
 Version:        1.0
-Release:        0.%(date --utc +%%Y%%m%%d%%H%%M)git%(git rev-parse --short HEAD)
+Release:        0.7
 License:        MIT
 Group:	        System Environment/Base
 Requires:       vdsm
@@ -87,7 +87,7 @@ EOC
 %post
 # FIXME unfiled
 sed -i "/Wants/ s/mom-vdsm\.service// ; /Wants/ a # mom-vdsm\.service dependency got removed" \
-       %{buildroot}/%{systemdunits}/vdsmd.service
+       %{systemdunits}/vdsmd.service
 
 
 %files
