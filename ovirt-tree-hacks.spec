@@ -1,7 +1,7 @@
 Summary:        Hacks required to build a tree
 Name:           ovirt-tree-hacks
 Version:        1.0
-Release:        0.6
+Release:        0.%(date --utc +%%Y%%m%%d%%H%%M)git%(git rev-parse --short HEAD)
 License:        MIT
 Group:	        System Environment/Base
 Requires:       vdsm
@@ -27,7 +27,7 @@ TBD
 mkdir -p %{buildroot}/%{systemdunits}/vdsm-network.service.wants/
 cat > %{buildroot}/%{systemdunits}/vdsm-network.service.wants/hack-bonding-defaults.service <<EOC
 [Service]
-ExecStart=/bin/curl -o /var/lib/bonding-defaults.json "https://gerrit.ovirt.org/gitweb?p=vdsm.git;a=blob_plain;f=vdsm/bonding-defaults.json;hb=HEAD"
+ExecStart=/bin/curl -o /var/lib/vdsm/bonding-defaults.json "https://gerrit.ovirt.org/gitweb?p=vdsm.git;a=blob_plain;f=vdsm/bonding-defaults.json;hb=HEAD"
 EOC
 
 #
