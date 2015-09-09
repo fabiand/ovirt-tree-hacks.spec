@@ -1,7 +1,7 @@
 Summary:        Hacks required to build a tree
 Name:           ovirt-tree-hacks
 Version:        1.0
-Release:        0.5
+Release:        0.6
 License:        MIT
 Group:	        System Environment/Base
 Requires:       vdsm
@@ -20,13 +20,19 @@ TBD
 
 
 %install
+#
+#
+#
 %see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1261056
-mkdir -p %{buildroot}/%{systemdunits}/vdsm-network.service.d/
-cat > %{buildroot}/%{systemdunits}/vdsm-network.service.d/hack-bonding-defaults.conf <<EOC
+mkdir -p %{buildroot}/%{systemdunits}/vdsm-network.service.wants/
+cat > %{buildroot}/%{systemdunits}/vdsm-network.service.wants/hack-bonding-defaults.service <<EOC
 [Service]
-ExecStartPre=/bin/curl -o /var/lib/bonding-defaults.json "https://gerrit.ovirt.org/gitweb?p=vdsm.git;a=blob_plain;f=vdsm/bonding-defaults.json;hb=HEAD"
+ExecStart=/bin/curl -o /var/lib/bonding-defaults.json "https://gerrit.ovirt.org/gitweb?p=vdsm.git;a=blob_plain;f=vdsm/bonding-defaults.json;hb=HEAD"
 EOC
 
+#
+#
+#
 %see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1260747
 mkdir -p %{buildroot}/usr/bin
 cat > %{buildroot}/usr/bin/hack-rhev-dir <<EOS
@@ -40,18 +46,20 @@ chattr +i /
 EOS
 chmod a+x %{buildroot}/usr/bin/hack-rhev-dir
 
-mkdir -p %{buildroot}/%{systemdunits}/vdsmd.service.d/
-cat > %{buildroot}/%{systemdunits}/vdsmd.service.d/hack-rhev-dir.conf <<EOC
+cat > %{buildroot}/%{systemdunits}/vdsm-network.service.wants/hack-rhev-dir.service <<EOC
 [Service]
-ExecStartPre=/usr/bin/hack-rhev-dir
+ExecStart=/usr/bin/hack-rhev-dir
 EOC
 
+#
 # Two bugs which are related to uids / nss-altfiles is not reocgnized always
+#
 %see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1261093
 %see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1171291
-# Create a manual sync mechanism
 mkdir -p %{buildroot}/usr/bin
 cat > %{buildroot}/usr/bin/hack-uids <<EOS
+#!/bin/bash
+
 { cat /etc/passwd ; egrep "qemu|kvm|vdsm|sanlock|rpc" /usr/lib/passwd ; } | sort -u > /etc/passwd_
 mv -v /etc/passwd_ /etc/passwd
 
@@ -62,18 +70,11 @@ sed -i '/^\(qemu\|kvm\):/ { s/,sanlock// ; s/$/,sanlock/ }' /etc/group
 EOS
 chmod a+x %{buildroot}/usr/bin/hack-uids
 
-# Run it before vdsm
-mkdir -p %{buildroot}/%{systemdunits}/vdsmd.service.d/
-cat > %{buildroot}/%{systemdunits}/vdsmd.service.d/hack-sanlock-uid.conf <<EOC
+# Run it before rpcbind which is run before vdsm
+mkdir -p %{buildroot}/%{systemdunits}/rpcbind.service.wants/
+cat > %{buildroot}/%{systemdunits}/rpcbind.service.wants/hack-rpc-uid.service <<EOC
 [Service]
-ExecStartPre=/usr/bin/hack-uids
-EOC
-
-# And before rpcbind
-mkdir -p %{buildroot}/%{systemdunits}/rpcbind.service.d/
-cat > %{buildroot}/%{systemdunits}/rpcbind.service.d/hack-rpc-uid.conf <<EOC
-[Service]
-ExecStartPre=/usr/bin/hack-uids
+ExecStart=/usr/bin/hack-uids
 EOC
 
 
@@ -86,10 +87,9 @@ sed -i "/Wants/ s/mom-vdsm\.service// ; /Wants/ a # mom-vdsm\.service dependency
 %files
 /usr/bin/hack-rhev-dir
 /usr/bin/hack-uids
-/usr/lib/systemd/system/rpcbind.service.d/hack-rpc-uid.conf
-/usr/lib/systemd/system/vdsm-network.service.d/hack-bonding-defaults.conf
-/usr/lib/systemd/system/vdsmd.service.d/hack-rhev-dir.conf
-/usr/lib/systemd/system/vdsmd.service.d/hack-sanlock-uid.conf
+/usr/lib/systemd/system/rpcbind.service.wants/hack-rpc-uid.service
+/usr/lib/systemd/system/vdsm-network.service.wants/hack-bonding-defaults.service
+/usr/lib/systemd/system/vdsm-network.service.wants/hack-rhev-dir.service
 
 
 %changelog
