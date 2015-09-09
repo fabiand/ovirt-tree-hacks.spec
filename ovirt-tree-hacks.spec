@@ -65,21 +65,23 @@ EOC
 
 %see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1171291
 mkdir -p %{buildroot}/%{systemdunits}/vdsm-network.service.d/
-cat > %{buildroot}/%{systemdunits}/vdsmd-network.service.d/handle-rpc-uid.conf <<EOC
+cat > %{buildroot}/%{systemdunits}/vdsm-network.service.d/handle-rpc-uid.conf <<EOC
 [Service]
 ExecStartPre=/usr/bin/grep rpc /usr/lib/passwd >> /etc/passwd ; /usr/bin/grep rpc /usr/lib/group >> /etc/group
 EOC
 
+
+%post
 # FIXME unfiled
-sed -i "/Wants/ s/mom-vdsm\.service//" \
-       "/Wants/ a # mom-vdsm\.service dependency got removed" \
-       /usr/lib/systemd/system/vdsmd.service
+sed -i "/Wants/ s/mom-vdsm\.service// ; /Wants/ a # mom-vdsm\.service dependency got removed" \
+       %{buildroot}/%{systemdunits}/vdsmd.service
 
 
 %files
 /usr/bin/create-rhev-dir
 /usr/bin/sync-sanlock
 /usr/lib/systemd/system/vdsm-network.service.d/get-bonding-defaults.conf
+/usr/lib/systemd/system/vdsm-network.service.d/handle-rpc-uid.conf
 /usr/lib/systemd/system/vdsmd.service.d/create-rhev-dir.conf
 /usr/lib/systemd/system/vdsmd.service.d/handle-sanlock-uid.conf
 
