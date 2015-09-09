@@ -1,7 +1,7 @@
 Summary:        Hacks required to build a tree
 Name:           ovirt-tree-hacks
 Version:        1.0
-Release:        0.3
+Release:        0.4
 License:        MIT
 Group:	        System Environment/Base
 Requires:       vdsm
@@ -64,8 +64,8 @@ ExecStartPre=/usr/bin/sync-sanlock
 EOC
 
 %see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1171291
-mkdir -p %{buildroot}/%{systemdunits}/vdsmd.service.d/
-cat > %{buildroot}/%{systemdunits}/vdsmd.service.d/handle-rpc-uid.conf <<EOC
+mkdir -p %{buildroot}/%{systemdunits}/vdsm-network.service.d/
+cat > %{buildroot}/%{systemdunits}/vdsmd-network.service.d/handle-rpc-uid.conf <<EOC
 [Service]
 ExecStartPre=/usr/bin/grep rpc /usr/lib/passwd >> /etc/passwd ; /usr/bin/grep rpc /usr/lib/group >> /etc/group
 EOC
