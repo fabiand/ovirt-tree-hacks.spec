@@ -86,8 +86,8 @@ sed -i "/Wants/ s/mom-vdsm\.service// ; /Wants/ a # mom-vdsm\.service dependency
 %files
 /usr/bin/hack-rhev-dir
 /usr/bin/hack-uids
+/usr/lib/systemd/system/rpcbind.service.d/hack-rpc-uid.conf
 /usr/lib/systemd/system/vdsm-network.service.d/hack-bonding-defaults.conf
-/usr/lib/systemd/system/vdsm-network.service.d/hack-rpc-uid.conf
 /usr/lib/systemd/system/vdsmd.service.d/hack-rhev-dir.conf
 /usr/lib/systemd/system/vdsmd.service.d/hack-sanlock-uid.conf
 
