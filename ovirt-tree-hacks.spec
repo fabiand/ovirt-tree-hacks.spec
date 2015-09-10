@@ -1,7 +1,7 @@
 Summary:        Hacks required to build a tree
 Name:           ovirt-tree-hacks
 Version:        1.0
-Release:        0.7
+Release:        0.8
 License:        MIT
 Group:	        System Environment/Base
 Requires:       vdsm
@@ -26,7 +26,11 @@ TBD
 %see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1261056
 mkdir -p %{buildroot}/%{systemdunits}/vdsm-network.service.wants/
 cat > %{buildroot}/%{systemdunits}/vdsm-network.service.wants/hack-bonding-defaults.service <<EOC
+[Unit]
+Before=vdsm-network.service
+
 [Service]
+Type=oneshot
 ExecStart=/bin/curl -o /var/lib/vdsm/bonding-defaults.json "https://gerrit.ovirt.org/gitweb?p=vdsm.git;a=blob_plain;f=vdsm/bonding-defaults.json;hb=HEAD"
 EOC
 
@@ -38,6 +42,8 @@ mkdir -p %{buildroot}/usr/bin
 cat > %{buildroot}/usr/bin/hack-rhev-dir <<EOS
 #!/bin/bash
 set -x
+[[ -e "/rhev" ]] && exit 0
+
 mkdir -vp /var/lib/vdsm/rhev
 chown -v vdsm:kvm /var/lib/vdsm/rhev
 chattr -i /
@@ -51,6 +57,7 @@ cat > %{buildroot}/%{systemdunits}/vdsm-network.service.wants/hack-rhev-dir.serv
 Before=vdsm-network.service
 
 [Service]
+Type=oneshot
 ExecStart=/usr/bin/hack-rhev-dir
 EOC
 
@@ -80,6 +87,7 @@ cat > %{buildroot}/%{systemdunits}/rpcbind.service.wants/hack-rpc-uid.service <<
 Before=rpcbind.service
 
 [Service]
+Type=oneshot
 ExecStart=/usr/bin/hack-uids
 EOC
 
