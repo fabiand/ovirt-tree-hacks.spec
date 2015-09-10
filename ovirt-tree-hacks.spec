@@ -1,7 +1,7 @@
 Summary:        Hacks required to build a tree
 Name:           ovirt-tree-hacks
 Version:        1.0
-Release:        0.9
+Release:        0.10
 License:        MIT
 Group:	        System Environment/Base
 Requires:       vdsm
@@ -62,6 +62,21 @@ ExecStart=/usr/bin/hack-rhev-dir
 EOC
 
 #
+#
+#
+%see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1261827
+mkdir -p %{buildroot}/%{systemdunits}/vdsmd.service.wants/
+cat > %{buildroot}/%{systemdunits}/vdsmd.service.wants/hack-ha.service <<EOC
+[Unit]
+Before=vdsmd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/touch /var/lib/ovirt-hosted-engine-ha/ha.conf
+EOC
+
+
+#
 # Two bugs which are related to uids / nss-altfiles is not reocgnized always
 #
 %see_bug https://bugzilla.redhat.com/show_bug.cgi?id=1261093
@@ -116,6 +131,7 @@ sed -i "/Wants/ s/mom-vdsm\.service// ; /Wants/ a # mom-vdsm\.service dependency
 /usr/lib/systemd/system/rpcbind.service.wants/hack-rpc-uid.service
 /usr/lib/systemd/system/vdsm-network.service.wants/hack-bonding-defaults.service
 /usr/lib/systemd/system/vdsm-network.service.wants/hack-rhev-dir.service
+/usr/lib/systemd/system/vdsmd.service.wants/hack-ha.service
 
 
 %changelog
