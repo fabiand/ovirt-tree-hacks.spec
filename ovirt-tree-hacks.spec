@@ -1,7 +1,7 @@
 Summary:        Hacks required to build a tree
 Name:           ovirt-tree-hacks
 Version:        1.0
-Release:        0.8
+Release:        0.9
 License:        MIT
 Group:	        System Environment/Base
 Requires:       vdsm
@@ -91,6 +91,17 @@ Type=oneshot
 ExecStart=/usr/bin/hack-uids
 EOC
 
+# FIXME unfiled
+mkdir -p %{buildroot}/%{systemdunits}/sshd.service.wants/
+cat > %{buildroot}/%{systemdunits}/sshd.service.wants/hack-sshd-perm.service <<EOC
+[Unit]
+Before=sshd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/chmod 0600 /etc/ssh/ssh_host_*
+EOC
+
 
 %post
 # FIXME unfiled
@@ -101,6 +112,7 @@ sed -i "/Wants/ s/mom-vdsm\.service// ; /Wants/ a # mom-vdsm\.service dependency
 %files
 /usr/bin/hack-rhev-dir
 /usr/bin/hack-uids
+/usr/lib/systemd/system/sshd.service.wants/hack-sshd-perm.service
 /usr/lib/systemd/system/rpcbind.service.wants/hack-rpc-uid.service
 /usr/lib/systemd/system/vdsm-network.service.wants/hack-bonding-defaults.service
 /usr/lib/systemd/system/vdsm-network.service.wants/hack-rhev-dir.service
