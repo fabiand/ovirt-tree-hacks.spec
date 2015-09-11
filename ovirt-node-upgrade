@@ -1,0 +1,20 @@
+#!/bin/bash
+
+cat <<EOF
+#
+# THIS IS A HACK FOR A POC
+#
+# The assumption is that we ignore the iso for offline
+# upgrades, and rely on the fact that the ostree repo
+# used for the current tree has an update.
+#
+# Called: $0 $@
+#
+EOF
+
+REBOOT=
+[[ "$@" =~ reboot ]] && REBOOT=--reboot
+[[ "$@" =~ iso ]] && echo "# WARN: The iso argument is ignored"
+
+set -x
+ostree admin upgrade --verbose $REBOOT
